@@ -1,0 +1,7 @@
+1. Tìm tất các link tiếng Việt trong Related Reports: của bài tiếng Anh(ví dụ:  https://en.minghui.org/html/articles/2023/6/30/210112.html)
+ - Cần input link tiếng Anh thêm dấu phảy "," và một ký tự bất kỳ như sau  
+ https://en.minghui.org/html/articles/2023/6/30/210112.html, all
+ 
+2. Tìm link tiếng Việt của bài tiếng Anh (ví dụ:  https://en.minghui.org/html/articles/2023/6/30/210112.html):
+  - input duy nhất link tiếng Anh như sau:
+ https://en.minghui.org/html/articles/2023/6/30/210112.html
