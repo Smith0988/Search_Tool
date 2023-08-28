@@ -1,35 +1,38 @@
 import csv
-
+import sys
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 import re
 import os
 
-# Khai báo
-file_new_tdth_vn = "tdth_vn_new.txt"
-file_new_gct_vn = "gct_vn_new.txt"
-file_new_tdth_en = "tdth_en_new.txt"
-file_new_gct_en = "gct_en_new.txt"
 
-file_total_tdth_vn = "links_tdth_vn_final.txt"
-file_total_gct_vn = "links_gct_vn_final.txt"
-file_total_tdth_en = "links_tdth_en_final.txt"
-file_total_gct_en = "links_gct_en_final.txt"
-
-file_tdth_csv = 'link_eng_vn_tdth.csv'
-file_gct_csv = 'link_eng_vn_gct.csv'
 
 # Đường dẫn link bài báo
 article_url_GCT = "https://vn.minghui.org/news/category/cuoc-buc-hai-o-trung-quoc"
 
-file_txt = 'gct_vn_new.txt'
-file_csv = 'link_eng_vn_gct.csv'
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
+
+# Khai báo
+file_new_gct_vn = resource_path("data\gct_vn_new.txt")
+file_new_gct_en = resource_path("data\gct_en_new.txt")
+file_gct_csv = resource_path("data\link_eng_vn_gct.csv")
+file_txt = resource_path("data\gct_vn_new.txt")
+file_csv = resource_path("data\link_eng_vn_gct.csv")
+
 
 def read_column_from_csv(file_name, column_index):
     df = pd.read_csv(file_name, header=None)
     column_data = df.iloc[:, column_index]
     return column_data.tolist()
+
 
 def read_links_from_file_1(file_path):
     try:
@@ -39,6 +42,8 @@ def read_links_from_file_1(file_path):
     except FileNotFoundError:
         print(f"File not found: {file_path}")
         return []
+
+
 def check_links(file_txt, file_csv, column_index=1):
     with open(file_txt, 'r') as f_txt:
         l1 = [line.strip() for line in f_txt.readlines()]
@@ -48,6 +53,7 @@ def check_links(file_txt, file_csv, column_index=1):
     l3 = [link for link in l1 if link not in l2]
 
     return l3
+
 
 def get_new_link_vn(url_vn):
     response = requests.get(url_vn)
@@ -195,7 +201,6 @@ def add_link_to_csv(file_name_en, file_name_vn):
     link_en_new = content_en.splitlines()
 
     if len(link_en_new) == len(link_vn_new) and link_en_new and link_vn_new:
-
         # Tạo DataFrame từ danh sách câu tiếng Anh và tiếng Việt đã tách
         df = pd.DataFrame({'English_Link': link_en_new, 'Vietnamese_Link': link_vn_new}, index=None)
 
@@ -206,7 +211,6 @@ def add_link_to_csv(file_name_en, file_name_vn):
     os.remove(file_new_gct_vn)
     os.remove(file_new_gct_en)
 
-
-#get_new_link_vn(article_url_GCT)
-#get_new_link_en(file_new_gct_vn)
-#add_link_to_csv(file_new_gct_en, file_new_gct_vn)
+# get_new_link_vn(article_url_GCT)
+# get_new_link_en(file_new_gct_vn)
+# add_link_to_csv(file_new_gct_en, file_new_gct_vn)

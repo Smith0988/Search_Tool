@@ -1,4 +1,5 @@
 import re
+import sys
 import nltk
 import os
 import pandas as pd
@@ -8,12 +9,26 @@ from bs4 import BeautifulSoup
 from google_translate import translate_with_google_translate
 import win32com.client
 
-
 copyright_text = "Bản quyền © 2023 Minghui.org. Mọi quyền được bảo lưu."
+
+
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
+
+
+csv_filename = resource_path("data\link_eng_vn_gct.csv")
+csv_filename_dic = resource_path("data\dic_eng_vn_data.csv")
+kv_data = resource_path("data\KV_data.csv")
+
 
 def find_vietnamese_link_1(english_link):
     # Đọc dữ liệu từ file CSV
-    csv_filename = "link_eng_vn_gct.csv"
     df = pd.read_csv(csv_filename)
     match = ""
     if re.match(r'https?://', english_link):
@@ -29,7 +44,7 @@ def find_vietnamese_link_1(english_link):
     if not matches.empty:
         vietnamese_link = matches.iloc[0, 1]
         if not vietnamese_link.startswith("http://") and not vietnamese_link.startswith("https://"):
-           vietnamese_link = "https:" + vietnamese_link  # Thêm schema "https:" nếu cần
+            vietnamese_link = "https:" + vietnamese_link  # Thêm schema "https:" nếu cần
 
         return vietnamese_link
     else:
@@ -80,6 +95,7 @@ def get_related_link(url):
     else:
         return [], []
 
+
 def find_vietnamese_link(english_link):
     first_text = "Bài liên quan:"
     all_link = []
@@ -87,8 +103,6 @@ def find_vietnamese_link(english_link):
     result_link.append(first_text)
     link_fail = "Can not find Vietnamese Link"
     # Đọc dữ liệu từ file CSV
-    csv_filename = "link_eng_vn_gct.csv"
-    df = pd.read_csv(csv_filename)
     related_content, related_link = get_related_link(english_link)
     for link in related_link:
         all_link.append(link)
@@ -96,11 +110,10 @@ def find_vietnamese_link(english_link):
         result_link.append(find_vietnamese_link_1(link))
     return related_content, result_link, all_link
 
-def find_vietnamese_sentence(english_sentence):
 
+def find_vietnamese_sentence(english_sentence):
     # Đọc dữ liệu từ file CSV
-    csv_filename = "dic_eng_vn_data.csv"
-    df = pd.read_csv(csv_filename)
+    df = pd.read_csv(csv_filename_dic)
 
     # Tìm link tiếng Anh trong cột 1
     row = df[df.iloc[:, 0] == english_sentence]
@@ -110,11 +123,13 @@ def find_vietnamese_sentence(english_sentence):
         return vietnamese_sentence
     else:
         return []
+
+
 def get_vn_article_title(url):
     try:
-        #kiem tra
+        # kiem tra
         if not url.startswith("http://") and not url.startswith("https://"):
-           url = "https:" + url  # Thêm schema "https:" nếu cần
+            url = "https:" + url  # Thêm schema "https:" nếu cần
         # Tải nội dung của trang web
         response = requests.get(url)
 
@@ -137,6 +152,7 @@ def get_vn_article_title(url):
     except Exception as e:
         return "Can not find Vietnamese Link"
 
+
 def get_en_article_title(url):
     response = requests.get(url)
     article_title = "Can not get title from web"
@@ -151,6 +167,7 @@ def get_en_article_title(url):
         elif article_title_tag_1:
             article_title = article_title_tag_1.text.strip()
         return article_title
+
 
 def write_en_article_to_doc(url):
     # Gửi yêu cầu HTTP để lấy nội dung trang web
@@ -172,7 +189,7 @@ def write_en_article_to_doc(url):
         title_name = article_title
         article_title_tag_byline = soup.find('div', class_='article-byline')
         if not article_title_tag_byline:
-              article_title_tag_byline = soup.find('div', class_='dateShare cf')
+            article_title_tag_byline = soup.find('div', class_='dateShare cf')
         article_title_line = article_title_tag_byline.text.strip()
         parts = article_title_line.split("|")
         if len(parts) > 1:
@@ -220,8 +237,6 @@ def write_en_article_to_doc(url):
                 p = doc.add_paragraph()
                 p.add_run(paragraph.get_text())
 
-
-
         italic_run = doc.add_paragraph().add_run(copyright_text)
         italic_run.font.italic = True
 
@@ -237,6 +252,7 @@ def write_en_article_to_doc(url):
 
     else:
         return None
+
 
 def tokenize_sentences_with_name_prefix(text):
     name_prefixes = ["Mr.", "Ms.", "No."]
@@ -254,6 +270,7 @@ def tokenize_sentences_with_name_prefix(text):
 
     return sentences
 
+
 def remove_empty_paragraphs(doc):
     # Tạo danh sách mới để lưu các đoạn không trống
     non_empty_paragraphs = []
@@ -267,18 +284,21 @@ def remove_empty_paragraphs(doc):
 
     return non_empty_paragraphs
 
+
 def paragraph_execute_text(english_paragragh):
     english_text = english_paragragh.text.strip()
     english_sentence_list = tokenize_sentences_with_name_prefix(english_text)
-    vietnamese_sentence_list =""
+    vietnamese_sentence_list = ""
     for english_sentence in english_sentence_list:
         vietnamese_sentence = find_vietnamese_sentence(english_sentence)
         if vietnamese_sentence:
-            vietnamese_sentence_list = vietnamese_sentence_list + " " +vietnamese_sentence
+            vietnamese_sentence_list = vietnamese_sentence_list + " " + vietnamese_sentence
         else:
-            vietnamese_sentence_list = vietnamese_sentence_list + " " + translate_with_google_translate(english_sentence)
+            vietnamese_sentence_list = vietnamese_sentence_list + " " + translate_with_google_translate(
+                english_sentence)
     vietnamese_sentence_list = vietnamese_sentence_list.strip()
-    return  vietnamese_sentence_list
+    return vietnamese_sentence_list
+
 
 def paragraph_text_check(english_paragragh):
     link = False
@@ -296,8 +316,8 @@ def paragraph_text_check(english_paragragh):
 
     return link, related_text, copyright_check
 
-def write_related_link_to_doc(file_name, url, link_en, link_cn):
 
+def write_related_link_to_doc(file_name, url, link_en, link_cn):
     vietnamese_text = []
     project_folder = os.getcwd()
     # Khởi động ứng dụng Microsoft Word
@@ -314,11 +334,11 @@ def write_related_link_to_doc(file_name, url, link_en, link_cn):
         vietnamese_text.append(get_vn_article_title(link))
     for i in range(len(english_text)):
         if i == 0:
-            #write Eng
+            # write Eng
             new_paragraph = doc.Content.Paragraphs.Add()
             new_paragraph.Range.Text = english_text[i]
             doc.Range().InsertAfter('\n')
-            #write vn
+            # write vn
             new_paragraph = doc.Content.Paragraphs.Add()
             new_paragraph.Range.Text = vietnam_link[i]
             doc.Range().InsertAfter('\n')
@@ -328,10 +348,10 @@ def write_related_link_to_doc(file_name, url, link_en, link_cn):
             # Thêm hyperlink
             hyperlink = new_paragraph.Range.Hyperlinks.Add(Anchor=new_paragraph.Range,
 
-                                                           Address=english_link[i-1], SubAddress="",
+                                                           Address=english_link[i - 1], SubAddress="",
                                                            TextToDisplay="Nhấn vào đây")
             doc.Range().InsertAfter('\n')
-            #Vietnam
+            # Vietnam
             new_paragraph = doc.Content.Paragraphs.Add()
             new_paragraph.Range.Text = vietnamese_text[i]
             # Thêm hyperlink
@@ -340,8 +360,8 @@ def write_related_link_to_doc(file_name, url, link_en, link_cn):
             if not re.search(pattern, vietnamese_text[i]):
                 hyperlink = new_paragraph.Range.Hyperlinks.Add(Anchor=new_paragraph.Range,
 
-                                                           Address=vietnam_link[i], SubAddress="",
-                                                           TextToDisplay="Nhấn vào đây")
+                                                               Address=vietnam_link[i], SubAddress="",
+                                                               TextToDisplay="Nhấn vào đây")
             doc.Range().InsertAfter('\n')
 
     new_paragraph = doc.Content.Paragraphs.Add()
@@ -384,7 +404,7 @@ def write_related_link_to_doc_1(english_text, vietnam_link, english_link, title)
     new_paragraph.Range.Text = title
     doc.Range().InsertAfter('\n')
 
-    #english_text, vietnam_link, english_link = find_vietnamese_link(url)
+    # english_text, vietnam_link, english_link = find_vietnamese_link(url)
     for link in vietnam_link:
         vietnamese_text.append(get_vn_article_title(link))
     for i in range(len(english_text)):
@@ -438,6 +458,7 @@ def write_related_link_to_doc_1(english_text, vietnam_link, english_link, title)
     word.Quit()
     return document_path
 
+
 def read_paragraph_in_word(url):
     file_name, link_en, link_cn = write_en_article_to_doc(url)
     file_name_translate = file_name + "_translate"
@@ -467,8 +488,8 @@ def read_paragraph_in_word(url):
             vietnamese_paragraph = paragraph_execute_text(paragraph)
             doc_translate.add_paragraph(paragraph.text.strip())
             doc_translate.add_paragraph(vietnamese_paragraph)
-        #if i == 3:
-           #break
+        # if i == 3:
+        # break
         doc_translate.save(file_name_translate + '.docx')
     doc_translate.save(file_name_translate + '.docx')
     if related_article:
@@ -476,7 +497,6 @@ def read_paragraph_in_word(url):
 
     else:
         doc_translate = Document(file_name_translate + '.docx')
-
         italic_run = doc.add_paragraph().add_run(copyright_text)
         italic_run.font.italic = True
         doc.add_heading("", 0)
@@ -486,17 +506,74 @@ def read_paragraph_in_word(url):
 
     return file_name, check_done
 
+def find_translation(english_sentence):
+    english_list = []  # Danh sách chứa cột 1 (tiếng Anh)
+    vietnamese_list = []  # Danh sách chứa cột 2 (tiếng Việt)
+    in_text = tokenize_sentences_with_name_prefix(english_sentence)
+    try:
+        # Đọc dữ liệu từ file CSV vào một DataFrame
+        df = pd.read_csv(kv_data)
+
+        # Lặp qua từng hàng trong cột 1 (tiếng Anh)
+        for index, row in df.iterrows():
+            english_text = row.iloc[0].strip()  # Sử dụng chỉ số cột của cột 1
+            vietnamese_text = row.iloc[1].strip()  # Sử dụng chỉ số cột của cột 2
+
+            # So sánh câu tiếng Anh được truyền vào với văn bản trong cột 1
+            if english_sentence in english_text:
+                english_list.append(english_text)
+                vietnamese_list.append(vietnamese_text)
+                break
+        if english_list:
+            return english_list, vietnamese_list, in_text
+        else:
+            print("khong tim thay")
+            return [], [], []
+
+    except Exception as e:
+        print(f"Đã xảy ra lỗi: {str(e)}")
+        return e
+
+
+    """
+    for i in range(len(english)):
+        english_sentence = tokenize_sentences_with_name_prefix(english[i])
+        vietnamese_sentence = tokenize_sentences_with_name_prefix(vietnamese[i])
+        if len(english_sentence) == len(vietnamese_sentence):
+            for j in range(len(english_sentence)):
+                final_text.append(english_sentence[j])
+                final_text.append(vietnamese_sentence[j])
+        elif len(english_sentence) > len(vietnamese_sentence):
+            k = len(vietnamese_sentence)
+            for j in range(len(vietnamese_sentence)):
+                final_text.append(english_sentence[j])
+                final_text.append(vietnamese_sentence[j])
+            for j in range(len(english_sentence) - len(vietnamese_sentence)):
+                k = k+1
+                if k >= len(english_sentence):
+                    break
+                final_text.append(english_sentence[k])
+        else:
+            k = len(english_sentence)
+            for j in range(len(english_sentence)):
+                final_text.append(english_sentence[j])
+                final_text.append(vietnamese_sentence[j])
+            for j in range(len(vietnamese_sentence) - len(english_sentence)):
+                k = k+1
+                if k >= len(vietnamese_sentence):
+                    break
+                final_text.append(vietnamese_sentence[k])
+        """
+
+#english_sentence = "Greetings to the Dafa practitioners attending the Italian Fa conference. The Dafa disciples of the Fa rectification period all have a calling to assist Master in saving sentient beings. As such, the Dafa disciples of each region have become the hope of salvation for the people in that region. For this reason, we must cultivate ourselves well and shoulder this unprecedented,"
+#text_execute(english_sentence)
+
 # Đường dẫn đến bài báo
-#url = "https://en.minghui.org/html/articles/2023/7/15/210315.html"
+# url = "https://en.minghui.org/html/articles/2023/7/15/210315.html"
 
-#file_test = "my_document.docx"
+# file_test = "my_document.docx"
 
-#write_related_link_to_doc(file_test, url)
-#write_en_article_to_doc(url)
-#read_paragraph_in_word(title_name ,url)
-#print(get_en_article_title(url))
-
-
-
-
-
+# write_related_link_to_doc(file_test, url)
+# write_en_article_to_doc(url)
+# read_paragraph_in_word(title_name ,url)
+# print(get_en_article_title(url))

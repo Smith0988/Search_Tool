@@ -50,6 +50,7 @@ def create_docx_file(url):
         return result_text
     else:
         return "Please check article link or network connection:"
+
 def Auto_Translate(url):
     title, check_done = read_paragraph_in_word(url)
     article_title = title + '_translate.docx'
@@ -61,6 +62,23 @@ def Auto_Translate(url):
         return result_text
     else:
         return "Translate error, please check network or article link"
+
+def text_execute(english, vietnam, in_text):
+    count = []
+    english_list =  tokenize_sentences_with_name_prefix(english)
+    vietnamse_list = tokenize_sentences_with_name_prefix(vietnam)
+    #print(english_list)
+    #print(vietnamse_list)
+    #print(in_text)
+    for i in range(len(english_list)):
+        check_point = False
+        for j in range(len(in_text)):
+            if in_text[j] in english_list[i]:
+                check_point = True
+                break
+        if check_point:
+            count.append(i)
+    return english_list, vietnamse_list, count
 
 def perform_action():
     # Xóa nội dung hiển thị kết quả
@@ -74,7 +92,7 @@ def perform_action():
         display_result(update_text)
     elif not user_input:
         messagebox.showwarning("Warning", "Please input search text.")
-    elif not re.match(pattern, user_input) and not (selected_action == "Search main article link"):
+    elif not re.match(pattern, user_input) and not (selected_action == "Search main article link") and not (selected_action == "Search KV"):
             messagebox.showwarning("Warning", "Please input correct link.")
     else:
         #custom_font = font.Font(family="Arial", size=16)
@@ -100,7 +118,77 @@ def execute_selected_action():
     elif selected_action == "Auto_Translate":
         result = Auto_Translate(user_input)
         display_result(result)
+    elif selected_action == "Search KV":
+        custom_font = font.Font(size=13)
+        result_textbox.delete(1.0, tk.END)
+        result_textbox.configure(font=custom_font)
+        result_textbox.tag_configure("bold", font=("Helvetica", 13, "bold"))
+        result_textbox.tag_configure("italic", font=("Helvetica", 13, "italic"))
 
+
+        english_text_in, vietname_text_in, in_text = find_translation(user_input)
+        print(english_text_in)
+        print(vietname_text_in)
+        for h in range(len(english_text_in)):
+            print("round", h)
+            english_text, vietname_text, list = text_execute(english_text_in[h], vietname_text_in[h], in_text)
+            #print(english_text)
+            #print(vietname_text)
+            #print(list)
+            for i in range(len(english_text)):
+                if i in list:
+                    result_textbox.insert(tk.END, english_text[i] + " ", ("bold",))
+                else:
+                    result_textbox.insert(tk.END, english_text[i] + " ", ("italic",))
+
+            result_textbox.insert(tk.END, "\n")
+            result_textbox.insert(tk.END, "================================================================================")
+            result_textbox.insert(tk.END, "\n")
+            for j in range(len(vietname_text)):
+                if j in list:
+                    result_textbox.insert(tk.END, vietname_text[j] + " ", ("bold",))
+                else:
+                    result_textbox.insert(tk.END, vietname_text[j] + " ", ("italic",))
+            result_textbox.insert(tk.END, "\n")
+            result_textbox.insert(tk.END, "================================================================================")
+            result_textbox.insert(tk.END, "\n")
+
+
+
+        """
+        print (in_text)
+        print(output_text)
+        #result = "\n".join(output_text)
+        # display_result(result)
+
+        result_textbox.delete(1.0, tk.END)
+        for i in range(0,len(output_text), 2):
+            check_point = False
+            for j in range (len(in_text)):
+                if in_text[j] in output_text[i]:
+                    check_point = True
+                    break
+            if check_point:
+                result_textbox.insert(tk.END, output_text[i])
+                result_textbox.tag_add("bold", "1.0", tk.END)
+                result_textbox.tag_configure("bold", font=("Helvetica", 13, "bold"))
+                result_textbox.insert(tk.END, "\n")
+                result_textbox.insert(tk.END, output_text[i+1])
+                result_textbox.tag_add("bold", "1.0", tk.END)
+                result_textbox.tag_configure("bold", font=("Helvetica", 13, "bold"))
+                result_textbox.insert(tk.END, "\n")
+
+            else:
+                result_textbox.insert(tk.END, output_text[i])
+                result_textbox.tag_add("italic", tk.END + "-%dc" % len(output_text[i]), tk.END)  # Đánh dấu phần vừa chèn
+                result_textbox.tag_configure("italic", font=("Helvetica", 13, "italic"))
+                result_textbox.insert(tk.END, "\n")
+
+                result_textbox.insert(tk.END, output_text[i+1])
+                result_textbox.tag_add("italic", tk.END + "-%dc" % len(output_text[i+1]), tk.END)  # Đánh dấu phần vừa chèn
+                result_textbox.tag_configure("italic", font=("Helvetica", 13, "italic"))
+                result_textbox.insert(tk.END, "\n")
+        """
 def display_result(result_text):
     custom_font = font.Font(size=13)
     result_textbox.delete(1.0, tk.END)
@@ -129,7 +217,7 @@ action_button.grid(row=0, column=0, padx=(10, 0), pady=20, sticky='w')
 # Tạo danh sách thả xuống cho các hành động
 action_var = tk.StringVar(root)
 action_var.set("Please select action...")  # Đặt hành động mặc định
-action_dropdown = tk.OptionMenu(root, action_var, "Update Link", "Search main article link", "Search related link", "Create docx file", "Auto_Translate", "-----")
+action_dropdown = tk.OptionMenu(root, action_var, "Update Link", "Search main article link", "Search related link", "Create docx file", "Search KV", "Auto_Translate")
 action_dropdown.grid(row=0, column=1, padx=(0, 10), pady=20, sticky='w')
 
 # Hàng 2

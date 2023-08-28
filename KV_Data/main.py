@@ -17,5 +17,6 @@ if len(list1) == len(list2):
             writer.writerow([item1, item2])
     print("Ghi thành công vào output.csv")
 else:
-    print("Độ dài của hai danh sách không trùng nhau.")
-
+    print("Độ dài của hai danh sách không trùng nhau.  -----------------------")
+print(len(list1))
+print(len(list2))
