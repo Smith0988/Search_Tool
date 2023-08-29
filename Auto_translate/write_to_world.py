@@ -520,51 +520,18 @@ def find_translation(english_sentence):
             vietnamese_text = row.iloc[1].strip()  # Sử dụng chỉ số cột của cột 2
 
             # So sánh câu tiếng Anh được truyền vào với văn bản trong cột 1
-            if english_sentence in english_text:
+            if english_sentence.lower() in english_text.lower():
                 english_list.append(english_text)
                 vietnamese_list.append(vietnamese_text)
                 break
         if english_list:
             return english_list, vietnamese_list, in_text
         else:
-            print("khong tim thay")
             return [], [], []
 
     except Exception as e:
         print(f"Đã xảy ra lỗi: {str(e)}")
         return e
-
-
-    """
-    for i in range(len(english)):
-        english_sentence = tokenize_sentences_with_name_prefix(english[i])
-        vietnamese_sentence = tokenize_sentences_with_name_prefix(vietnamese[i])
-        if len(english_sentence) == len(vietnamese_sentence):
-            for j in range(len(english_sentence)):
-                final_text.append(english_sentence[j])
-                final_text.append(vietnamese_sentence[j])
-        elif len(english_sentence) > len(vietnamese_sentence):
-            k = len(vietnamese_sentence)
-            for j in range(len(vietnamese_sentence)):
-                final_text.append(english_sentence[j])
-                final_text.append(vietnamese_sentence[j])
-            for j in range(len(english_sentence) - len(vietnamese_sentence)):
-                k = k+1
-                if k >= len(english_sentence):
-                    break
-                final_text.append(english_sentence[k])
-        else:
-            k = len(english_sentence)
-            for j in range(len(english_sentence)):
-                final_text.append(english_sentence[j])
-                final_text.append(vietnamese_sentence[j])
-            for j in range(len(vietnamese_sentence) - len(english_sentence)):
-                k = k+1
-                if k >= len(vietnamese_sentence):
-                    break
-                final_text.append(vietnamese_sentence[k])
-        """
-
 #english_sentence = "Greetings to the Dafa practitioners attending the Italian Fa conference. The Dafa disciples of the Fa rectification period all have a calling to assist Master in saving sentient beings. As such, the Dafa disciples of each region have become the hope of salvation for the people in that region. For this reason, we must cultivate ourselves well and shoulder this unprecedented,"
 #text_execute(english_sentence)
 

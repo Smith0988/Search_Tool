@@ -1,52 +1,37 @@
 import tkinter as tk
-from tkinter import font
 
-def display_text_with_style(result_textbox, vietnamese_text, english_text, style_list):
-    custom_font = font.Font(size=13)
-    result_textbox.delete(1.0, tk.END)
-    result_textbox.configure(font=custom_font)
+# Hàm để sao chép title và hyperlink vào clipboard
+def copy_title_and_hyperlink():
+    title = "Người đàn ông 70 tuổi ở Hà Bắc bị giam giữ vì phân phát tài liệu thông tin Pháp Luân Công"
+    hyperlink = "https://vn.minghui.org/news/251544-nguoi-dan-ong-70-tuoi-o-ha-bac-bi-giam-giu-vi-phan-phat-tai-lieu-thong-tin-phap-luan-cong.html"
 
-    # Duyệt qua từng phần tử trong danh sách tiếng Anh và tiếng Việt
-    for i in range(len(english_text)):
-        if i in style_list:
-            # In đậm
-            result_textbox.insert(tk.END, english_text[i] + " ", ("bold",))
-        else:
-            # In nghiêng
-            result_textbox.insert(tk.END, english_text[i] + " ", ("italic",))
+    # Kết hợp title và hyperlink
+    title_with_hyperlink = f"<a href=\"{hyperlink}\">{title}</a>"
 
-    # Thêm ký tự xuống dòng sau tiếng Anh
-    result_textbox.insert(tk.END, "\n")
+    # Sao chép vào clipboard
+    root.clipboard_clear()
+    root.clipboard_append(title_with_hyperlink)
 
-    for j in range(len(vietnamese_text)):
-        if j in style_list:
-            # In đậm
-            result_textbox.insert(tk.END, vietnamese_text[j] + " ", ("bold",))
-        else:
-            # In nghiêng
-            result_textbox.insert(tk.END, vietnamese_text[j] + " ", ("italic",))
+# Tạo cửa sổ tkinter
+root = tk.Tk()
 
-# Tạo một cửa sổ tkinter
-window = tk.Tk()
-window.geometry("400x400")
+# Tạo label để hiển thị title với hyperlink
+title_label = tk.Label(root, text="Người đàn ông 70 tuổi ở Hà Bắc bị giam giữ vì phân phát tài liệu thông tin Pháp Luân Công", fg="blue", cursor="hand2")
+title_label.pack()
 
-# Tạo một Text widget
-result_textbox = tk.Text(window, wrap=tk.WORD)
-result_textbox.pack()
+# Định nghĩa hyperlink
+hyperlink = "https://vn.minghui.org/news/251544-nguoi-dan-ong-70-tuoi-o-ha-bac-bi-giam-giu-vi-phan-phat-tai-lieu-thong-tin-phap-luan-cong.html"
 
-# Danh sách mẫu tiếng Việt và tiếng Anh
-vietnamese_text = ["Đoạn tiếng Việt 1", "Đoạn tiếng Việt 2", "Đoạn 5"]
-english_text = ["English text 1", "English text 2", "Đoạn 6"]
+# Thiết lập sự kiện click cho label để mở hyperlink trong trình duyệt
+def open_hyperlink(event):
+    import webbrowser
+    webbrowser.open_new(hyperlink)
 
-# Danh sách chỉ định định dạng cho tiếng Anh và tiếng Việt
-style_list = [0, 1]  # Để in đậm cho phần tử 0 và in nghiêng cho phần tử 1
+title_label.bind("<Button-1>", open_hyperlink)
 
-# Định dạng in đậm và in nghiêng
-result_textbox.tag_configure("bold", font=("Helvetica", 13, "bold"))
-result_textbox.tag_configure("italic", font=("Helvetica", 13, "italic"))
+# Tạo nút "Copy" để sao chép title và hyperlink
+copy_button = tk.Button(root, text="Copy", command=copy_title_and_hyperlink)
+copy_button.pack()
 
-# Gọi hàm display_text_with_style để hiển thị đoạn văn bản
-display_text_with_style(result_textbox, vietnamese_text, english_text, style_list)
+root.mainloop()
 
-# Khởi chạy giao diện
-window.mainloop()
